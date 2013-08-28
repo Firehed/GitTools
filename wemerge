@@ -121,8 +121,10 @@ class Merge {
 			case 'avail':
 				$this->displayAvail();
 				break;
+			default:
+				$this->help(1);
+				break;
 		}
-		$this->help(1);
 	}
 	private function exec($cmd) {
 		$args = func_get_args();
