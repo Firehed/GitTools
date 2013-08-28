@@ -23,7 +23,7 @@ class Merge {
 		foreach ($out as $line) {
 			list($symbol, $hash) = explode(' ', $line);
 			if ($symbol == '+') {
-				$this->avail[$hash] = true;
+				$this->avail[$hash] = $hash;
 			}
 		}
 	}
@@ -78,7 +78,7 @@ class Merge {
 
 	private function displayAvail() {
 		$this->loadAvail();
-		foreach ($this->avail as $hash => $x) {
+		foreach ($this->avail as $hash) {
 			$commit = $this->getDescription($hash);
 			printf("%s * %s %s <%s> - %s\n"
 				, $commit->getHash()
