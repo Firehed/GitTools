@@ -1,0 +1,74 @@
+#!/usr/bin/php
+<?php
+
+namespace Firehed\GitTools;
+
+class Merge {
+	private $from = 'master';
+	private $avail = array();
+
+	private function avail() {
+		$cmd = "git cherry %s";
+		$out = $this->exec($cmd, $this->from);
+		foreach ($out as $line) {
+			list($symbol, $hash) = explode(' ', $line);
+			if ($symbol == '+') {
+				$this->avail[$hash] = true;
+			}
+		}
+	}
+
+	private function getDescription($hash) {
+		$hash = '1e95a417f9f0950cee6370b0aaa987bd9137dc77';
+		// Format derived from 'git help show', "format" section
+		$format = '%H%n'
+			. '%an%n'
+			. '%ae%n'
+			. '%at%n'
+			. '%cn%n'
+			. '%ce%n'
+			. '%ct%n'
+			. '%s%n'
+			. '%b';
+		$cmd = "git show %s --pretty=format:%s -s";
+		$out = $this->exec($cmd, $hash, $format);
+		list($hash
+		   , $authorName
+		   , $authorEmail
+		   , $authorTimestamp
+		   , $commiterName
+		   , $committerEmail
+		   , $committerTimestamp
+		   , $summary
+		   ) = $out;
+		$out = array_slice($out, 8);
+		$body = implode("\n", $out);
+
+		unset($format,$cmd,$out);
+		print_r(get_defined_vars());
+	}
+
+
+	function __construct() { 
+		$this->avail();
+		$this->getDescription(end(array_keys($this->avail)));
+	}
+	
+	private function exec($cmd) {
+		$args = func_get_args();
+		array_shift($args);
+		array_walk($args, function(&$v, $k) { $v = escapeshellarg($v); });
+		var_dump($args);
+		if ($args) {
+			$cmd = vsprintf($cmd, $args);
+		}
+		exec($cmd, $out, $err);
+		if ($err) {
+			throw new \Exception(sprintf("Command %s failed with result %s", $cmd, print_r($out, true)), $err);
+		}
+		return $out;
+	}
+
+}
+
+new Merge;
