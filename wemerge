@@ -69,25 +69,33 @@ class Merge {
 
 
 	function __construct() { 
+		$this->determineCurrentBranch();
 		$this->displaySanityWarning();
 		$this->run();
 	}
 
-	private function displaySanityWarning() {
+	private function determineCurrentBranch() {
 		foreach ($this->exec('git branch') as $branch) {
 			if (0 === strpos($branch, '*')) {
 				$this->currentBranch = substr($branch, 2);
 				break;
 			}
 		}
-		if (!$this->currentBranch) {
+		if (!$this->currentBranch || '(no branch)' == $this->currentBranch) {
 			throw new \Exception("Could not detect current branch");
 		}
+	}
+
+	private function displaySanityWarning() {
 		if ($behind = count($this->exec("git rev-list refs/remotes/origin/%s...%s"
 			, $this->currentBranch
 			, 'HEAD'
 		))) {
 			echo "Warning: you are $behind commits behind HEAD! Maybe 'git pull' first?\n";
+		}
+		if ('master' == $this->currentBranch) {
+			echo "You currently have master checked out. This tool only supports merging FROM master right now.\n";
+			exit;
 		}
 	}
 
