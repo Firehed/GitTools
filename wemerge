@@ -2,6 +2,8 @@
 <?php
 
 namespace Firehed\GitTools;
+ini_set('display_errors', 'STDOUT');
+ini_set('error_reporting', -1);
 
 if (!ini_get('date.timezone')) {
 	date_default_timezone_set('America/Los_Angeles');
@@ -17,6 +19,7 @@ class Merge {
 	private $from = 'master';
 	private $avail = array();
 	private $currentBranch;
+	private $toMerge = array();
 
 	private function loadAvail() {
 		// "git cherry destination source"
@@ -123,11 +126,63 @@ class Merge {
 			case 'avail':
 				$this->displayAvail();
 				break;
+			case 'merge':
+				$this->performMerge();
+				break;
 			default:
 				$this->help(1);
 				break;
 		}
 	}
+
+	private function performMerge() {
+		$this->loadAvail();
+		foreach ($this->avail as $hash) {
+			$commit = $this->getDescription($hash);
+			echo $commit->asOneLine() . "\n";
+			switch ($this->prompt("Merge?", array('y','n','q'), 'n')) {
+			case 'y':
+				$this->toMerge[$hash] = $commit;
+				break;
+			case 'n':
+				break; // do nothing
+			case 'q':
+				break 2; // stop prompting entirely
+			}
+		}
+		if ($this->toMerge) {
+			echo "The following changes will be merged: \n";
+			foreach ($this->toMerge as $hash => $commit) {
+				echo $commit->asOneLine() . "\n";
+			}
+			switch ($this->prompt("Merge those revisions?", array('y', 'n'), 'n')) {
+			case 'y':
+				foreach ($this->toMerge as $commit) {
+					$this->exec('git cherry-pick %s', $commit->getHash());
+				}
+				echo "Revisions have been merged and committed. You should probably push.\n";
+				break;
+			case 'n':
+				echo "Merge aborted!\n";
+				break;
+			}
+		}
+	}
+
+	private function prompt($msg, array $opts, $default) {
+		do {
+			echo $msg . ' [' . implode('/', $opts) . '] ';
+			$answer = strtolower(trim(fgets(STDIN)));
+			if (!$answer) return $default;
+			if (in_array($answer, $opts)) {
+				return $answer;
+			} else {
+				echo "Invalid option. ";
+			}
+		} while (true);
+	}
+
+
 	private function exec($cmd) {
 		$args = func_get_args();
 		array_shift($args);
