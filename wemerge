@@ -3,11 +3,16 @@
 
 namespace Firehed\GitTools;
 
+if (!ini_get('date.timezone')) {
+	date_default_timezone_set('America/Los_Angeles');
+}
+
 class Merge {
+
 	private $from = 'master';
 	private $avail = array();
 
-	private function avail() {
+	private function loadAvail() {
 		$cmd = "git cherry %s";
 		$out = $this->exec($cmd, $this->from);
 		foreach ($out as $line) {
@@ -19,7 +24,6 @@ class Merge {
 	}
 
 	private function getDescription($hash) {
-		$hash = '1e95a417f9f0950cee6370b0aaa987bd9137dc77';
 		// Format derived from 'git help show', "format" section
 		$format = '%H%n'
 			. '%an%n'
@@ -59,10 +63,42 @@ class Merge {
 
 
 	function __construct() { 
-		$this->avail();
-		print_r($this->getDescription(end(array_keys($this->avail))));
+		$this->run();
 	}
-	
+
+	private function help($exit = 0) {
+		echo "Usage: todo\n";
+		exit($exit);
+	}
+
+	private function displayAvail() {
+		$this->loadAvail();
+		foreach ($this->avail as $hash => $x) {
+			$commit = $this->getDescription($hash);
+			printf("%s * %s %s <%s> - %s\n"
+				, $commit->getHash()
+				, date('c', $commit->getAuthorTimestamp())
+				, $commit->getAuthorName()
+				, $commit->getAuthorEmail()
+				, $commit->getSummary()
+			);
+		}
+	}
+
+
+	private function run() {
+		// not using getopt() because it handles out-of-order args poorly
+		if ($_SERVER['argc'] < 2) {
+			$this->help(1);
+		}
+		$cmd = $_SERVER['argv'][1];
+		switch (strtolower($cmd)) {
+			case 'avail':
+				$this->displayAvail();
+				break;
+		}
+		$this->help(1);
+	}
 	private function exec($cmd) {
 		$args = func_get_args();
 		array_shift($args);
@@ -99,7 +135,7 @@ class Commit {
 		case 'get':
 			$key = substr($fn, 3);
 			if (property_exists($this, $key)) {
-				return $this->key;
+				return $this->$key;
 			}
 			break;
 		case 'set':
@@ -114,4 +150,6 @@ class Commit {
 	}
 
 }
+
 new Merge;
+
