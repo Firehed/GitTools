@@ -7,6 +7,11 @@ if (!ini_get('date.timezone')) {
 	date_default_timezone_set('America/Los_Angeles');
 }
 
+// Borrowed from FB's libphutil for php<5.4 compat
+function id($x) {
+	return $x;
+}
+
 class Merge {
 
 	private $from = 'master';
@@ -48,7 +53,7 @@ class Merge {
 		$out = array_slice($out, 8);
 		$body = implode("\n", $out);
 
-		return (new Commit)
+		return id(new Commit)
 			->setHash($hash)
 			->setAuthorName($authorName)
 			->setAuthorEmail($authorEmail)
