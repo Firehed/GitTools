@@ -100,16 +100,9 @@ class Merge {
 		$this->loadAvail();
 		foreach ($this->avail as $hash) {
 			$commit = $this->getDescription($hash);
-			printf("%s * %s %s <%s> - %s\n"
-				, $commit->getHash()
-				, date('c', $commit->getAuthorTimestamp())
-				, $commit->getAuthorName()
-				, $commit->getAuthorEmail()
-				, $commit->getSummary()
-			);
+			echo $commit->asOneLine() . "\n";
 		}
 	}
-
 
 	private function run() {
 		// not using getopt() because it handles out-of-order args poorly
@@ -155,6 +148,16 @@ class Commit {
 	
 	public function __construct() {
 		// no-op
+	}
+
+	public function asOneLine() {
+		return sprintf("%s * %s %s <%s> - %s"
+			, $this->getHash()
+			, date('c', $this->getAuthorTimestamp())
+			, $this->getAuthorName()
+			, $this->getAuthorEmail()
+			, $this->getSummary()
+		);
 	}
 
 	public function __call($fn, $args) {
