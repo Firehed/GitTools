@@ -44,14 +44,23 @@ class Merge {
 		$out = array_slice($out, 8);
 		$body = implode("\n", $out);
 
-		unset($format,$cmd,$out);
-		print_r(get_defined_vars());
+		return (new Commit)
+			->setHash($hash)
+			->setAuthorName($authorName)
+			->setAuthorEmail($authorEmail)
+			->setAuthorTimestamp($authorTimestamp)
+			->setCommiterName($commiterName)
+			->setCommitterEmail($commiterName)
+			->setCommitterTimestamp($commiterName)
+			->setSummary($summary)
+			->setBody($body)
+			;
 	}
 
 
 	function __construct() { 
 		$this->avail();
-		$this->getDescription(end(array_keys($this->avail)));
+		print_r($this->getDescription(end(array_keys($this->avail))));
 	}
 	
 	private function exec($cmd) {
@@ -70,4 +79,39 @@ class Merge {
 
 }
 
+class Commit {
+	private $Hash;
+	private $AuthorName;
+	private $AuthorEmail;
+	private $AuthorTimestamp;
+	private $CommiterName;
+	private $CommitterEmail;
+	private $CommitterTimestamp;
+	private $Summary;
+	private $Body;
+	
+	public function __construct() {
+		// no-op
+	}
+
+	public function __call($fn, $args) {
+		switch (strtolower(substr($fn, 0, 3))) {
+		case 'get':
+			$key = substr($fn, 3);
+			if (property_exists($this, $key)) {
+				return $this->key;
+			}
+			break;
+		case 'set':
+			$key = substr($fn, 3);
+			if (property_exists($this, $key)) {
+				$this->$key = $args[0];
+				return $this;
+			}
+			break;
+		}
+		throw new \Exception("Method not found!");
+	}
+
+}
 new Merge;
