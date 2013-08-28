@@ -16,6 +16,7 @@ class Merge {
 
 	private $from = 'master';
 	private $avail = array();
+	private $currentBranch;
 
 	private function loadAvail() {
 		$cmd = "git cherry %s";
@@ -68,7 +69,26 @@ class Merge {
 
 
 	function __construct() { 
+		$this->displaySanityWarning();
 		$this->run();
+	}
+
+	private function displaySanityWarning() {
+		foreach ($this->exec('git branch') as $branch) {
+			if (0 === strpos($branch, '*')) {
+				$this->currentBranch = substr($branch, 2);
+				break;
+			}
+		}
+		if (!$this->currentBranch) {
+			throw new \Exception("Could not detect current branch");
+		}
+		if ($behind = count($this->exec("git rev-list refs/remotes/origin/%s...%s"
+			, $this->currentBranch
+			, 'HEAD'
+		))) {
+			echo "Warning: you are $behind commits behind HEAD! Maybe 'git pull' first?\n";
+		}
 	}
 
 	private function help($exit = 0) {
