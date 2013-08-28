@@ -58,7 +58,6 @@ class Merge {
 		$args = func_get_args();
 		array_shift($args);
 		array_walk($args, function(&$v, $k) { $v = escapeshellarg($v); });
-		var_dump($args);
 		if ($args) {
 			$cmd = vsprintf($cmd, $args);
 		}
