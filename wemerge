@@ -2,8 +2,6 @@
 <?php
 
 namespace Firehed\GitTools;
-ini_set('display_errors', 'STDOUT');
-ini_set('error_reporting', -1);
 
 if (!ini_get('date.timezone')) {
 	date_default_timezone_set('America/Los_Angeles');
